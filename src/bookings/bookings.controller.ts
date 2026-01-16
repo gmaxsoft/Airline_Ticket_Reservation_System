@@ -6,12 +6,15 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('bookings')
+@UseGuards(JwtAuthGuard) // Zabezpiecza wszystkie endpointy w kontrolerze
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
