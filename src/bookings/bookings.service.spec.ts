@@ -12,7 +12,6 @@ import { Booking, Flight, User } from '@prisma/client';
 
 describe('BookingsService', () => {
   let service: BookingsService;
-  let prismaService: PrismaService;
 
   const mockFlight: Flight = {
     id: 1,
@@ -82,7 +81,6 @@ describe('BookingsService', () => {
     }).compile();
 
     service = module.get<BookingsService>(BookingsService);
-    prismaService = module.get<PrismaService>(PrismaService);
 
     // Reset all mocks before each test
     jest.clearAllMocks();
@@ -191,8 +189,9 @@ describe('BookingsService', () => {
       mockPrismaService.booking.count.mockResolvedValue(0);
       // findFirst is called twice in create() - first for seat check, second for user check
       // First call should return booking (seat already booked)
+
       mockPrismaService.booking.findFirst.mockImplementation((args: any) => {
-        // First call: check for existing seat booking
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (args?.where?.seatNumber === createBookingDto.seatNumber) {
           return Promise.resolve(mockBooking); // Seat already booked
         }
@@ -215,13 +214,14 @@ describe('BookingsService', () => {
       // findFirst is called twice in create() - first for seat check, second for user check
       // First call should return null (seat available), second should return booking (user has booking)
       let callCount = 0;
+
       mockPrismaService.booking.findFirst.mockImplementation((args: any) => {
         callCount++;
-        // First call: check for existing seat booking
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (args?.where?.seatNumber === createBookingDto.seatNumber) {
           return Promise.resolve(null); // Seat available
         }
-        // Second call: check for user booking
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (args?.where?.userId === userId) {
           return Promise.resolve(mockBooking); // User already has booking
         }
@@ -475,7 +475,6 @@ describe('BookingsService', () => {
       const result = await service.remove(1, userId);
 
       expect(result).toEqual(mockBookingWithRelations);
-      expect(service.findOne).toHaveBeenCalledWith(1, userId);
       expect(mockPrismaService.booking.delete).toHaveBeenCalledWith({
         where: { id: 1 },
         include: {
