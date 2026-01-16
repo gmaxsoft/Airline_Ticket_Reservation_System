@@ -6,37 +6,46 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { FlightsService } from './flights.service';
 import { CreateFlightDto } from './dto/create-flight.dto';
 import { UpdateFlightDto } from './dto/update-flight.dto';
+import { Flight } from '@prisma/client';
 
 @Controller('flights')
 export class FlightsController {
   constructor(private readonly flightsService: FlightsService) {}
 
   @Post()
-  create(@Body() createFlightDto: CreateFlightDto) {
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() createFlightDto: CreateFlightDto): Promise<Flight> {
     return this.flightsService.create(createFlightDto);
   }
 
   @Get()
-  findAll() {
+  async findAll(): Promise<Flight[]> {
     return this.flightsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.flightsService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Flight> {
+    return this.flightsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFlightDto: UpdateFlightDto) {
-    return this.flightsService.update(+id, updateFlightDto);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateFlightDto: UpdateFlightDto,
+  ): Promise<Flight> {
+    return this.flightsService.update(id, updateFlightDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.flightsService.remove(+id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<Flight> {
+    return this.flightsService.remove(id);
   }
 }
