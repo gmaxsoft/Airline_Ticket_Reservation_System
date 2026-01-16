@@ -1,11 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
-import { ExtractJwt } from 'passport-jwt';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
-  let mockConfigService: jest.Mocked<ConfigService>;
 
   const mockConfigServiceMethods = {
     get: jest.fn(),
