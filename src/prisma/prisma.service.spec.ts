@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from './prisma.service';
 
 // Mock PrismaClient to avoid database connection issues in tests
-jest.mock('.prisma/client', () => {
+jest.mock('@prisma/client', () => {
   return {
     PrismaClient: jest.fn().mockImplementation(() => ({
       $connect: jest.fn().mockResolvedValue(undefined),

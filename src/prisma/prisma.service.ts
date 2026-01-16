@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '.prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import 'dotenv/config'; // Załaduj zmienne środowiskowe przed użyciem
 
