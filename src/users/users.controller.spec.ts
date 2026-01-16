@@ -36,7 +36,6 @@ describe('UsersController', () => {
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
-    mockUsersService = module.get<jest.Mocked<UsersService>>(UsersService);
 
     // Reset all mocks before each test
     jest.clearAllMocks();
