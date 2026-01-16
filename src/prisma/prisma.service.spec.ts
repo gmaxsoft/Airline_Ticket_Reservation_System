@@ -67,12 +67,12 @@ describe('PrismaService', () => {
   });
 
   it('should have onModuleInit method', () => {
-    expect(service.onModuleInit).toBeDefined();
+    expect('onModuleInit' in service).toBe(true);
     expect(typeof service.onModuleInit).toBe('function');
   });
 
   it('should have onModuleDestroy method', () => {
-    expect(service.onModuleDestroy).toBeDefined();
+    expect('onModuleDestroy' in service).toBe(true);
     expect(typeof service.onModuleDestroy).toBe('function');
   });
 });
