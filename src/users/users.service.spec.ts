@@ -303,7 +303,9 @@ describe('UsersService', () => {
   describe('remove', () => {
     it('should delete a user', async () => {
       // findOne uses findUnique with select
+
       mockPrismaService.user.findUnique.mockImplementation((args: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (args?.where?.id === 1) {
           return Promise.resolve(mockSafeUser);
         }
@@ -336,7 +338,9 @@ describe('UsersService', () => {
 
     it('should throw NotFoundException if user does not exist', async () => {
       // findOne uses findUnique with select
-      mockPrismaService.user.findUnique.mockImplementation((args) => {
+
+      mockPrismaService.user.findUnique.mockImplementation((args: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (args?.where?.id === 999) {
           return Promise.resolve(null);
         }
