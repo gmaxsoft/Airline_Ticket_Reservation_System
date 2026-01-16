@@ -8,11 +8,15 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor(configService: ConfigService) {
-    const databaseUrl = configService.get<string>('DATABASE_URL');
+    // Upewnij się, że DATABASE_URL jest dostępna w zmiennych środowiskowych
+    // Prisma 7 automatycznie odczytuje DATABASE_URL z process.env
+    const databaseUrl =
+      configService.get<string>('DATABASE_URL') || process.env.DATABASE_URL;
     if (!databaseUrl) {
       throw new Error('DATABASE_URL is not defined in environment variables');
     }
-    // Prisma 7 wymaga przekazania opcji w konstruktorze
+    // Ustawiamy DATABASE_URL w process.env przed wywołaniem super()
+    process.env.DATABASE_URL = databaseUrl;
     super();
   }
 
