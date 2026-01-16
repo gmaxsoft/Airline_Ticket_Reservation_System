@@ -16,6 +16,7 @@ export class PrismaService
       throw new Error('DATABASE_URL is not defined in environment variables');
     }
     // Ustawiamy DATABASE_URL w process.env przed wywołaniem super()
+    // Prisma Client automatycznie odczytuje DATABASE_URL z process.env
     process.env.DATABASE_URL = databaseUrl;
     super();
   }
