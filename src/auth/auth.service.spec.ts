@@ -13,8 +13,6 @@ jest.mock('bcrypt', () => ({
 
 describe('AuthService', () => {
   let service: AuthService;
-  let mockUsersService: jest.Mocked<UsersService>;
-  let mockJwtService: jest.Mocked<JwtService>;
 
   const mockUser: User = {
     id: 1,
@@ -48,8 +46,6 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    mockUsersService = module.get<jest.Mocked<UsersService>>(UsersService);
-    mockJwtService = module.get<jest.Mocked<JwtService>>(JwtService);
 
     // Reset all mocks before each test
     jest.clearAllMocks();
@@ -65,9 +61,9 @@ describe('AuthService', () => {
     const accessToken = 'mockAccessToken123';
 
     it('should login successfully with valid credentials', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUsersServiceMethods.findByEmail.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      mockJwtService.signAsync.mockResolvedValue(accessToken);
+      mockJwtServiceMethods.signAsync.mockResolvedValue(accessToken);
 
       const result = await service.login(email, password);
 
@@ -79,19 +75,19 @@ describe('AuthService', () => {
           fullName: mockUser.fullName,
         },
       });
-      expect(mockUsersService.findByEmail).toHaveBeenCalledWith(email);
-      expect(mockUsersService.findByEmail).toHaveBeenCalledTimes(1);
+      expect(mockUsersServiceMethods.findByEmail).toHaveBeenCalledWith(email);
+      expect(mockUsersServiceMethods.findByEmail).toHaveBeenCalledTimes(1);
       expect(bcrypt.compare).toHaveBeenCalledWith(password, mockUser.password);
       expect(bcrypt.compare).toHaveBeenCalledTimes(1);
-      expect(mockJwtService.signAsync).toHaveBeenCalledWith({
+      expect(mockJwtServiceMethods.signAsync).toHaveBeenCalledWith({
         sub: mockUser.id,
         email: mockUser.email,
       });
-      expect(mockJwtService.signAsync).toHaveBeenCalledTimes(1);
+      expect(mockJwtServiceMethods.signAsync).toHaveBeenCalledTimes(1);
     });
 
     it('should throw UnauthorizedException if user does not exist', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUsersServiceMethods.findByEmail.mockResolvedValue(null);
 
       await expect(service.login(email, password)).rejects.toThrow(
         UnauthorizedException,
@@ -99,13 +95,13 @@ describe('AuthService', () => {
       await expect(service.login(email, password)).rejects.toThrow(
         'Błędny email lub hasło',
       );
-      expect(mockUsersService.findByEmail).toHaveBeenCalledWith(email);
+      expect(mockUsersServiceMethods.findByEmail).toHaveBeenCalledWith(email);
       expect(bcrypt.compare).not.toHaveBeenCalled();
-      expect(mockJwtService.signAsync).not.toHaveBeenCalled();
+      expect(mockJwtServiceMethods.signAsync).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException if password is incorrect', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUsersServiceMethods.findByEmail.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(service.login(email, password)).rejects.toThrow(
@@ -114,28 +110,28 @@ describe('AuthService', () => {
       await expect(service.login(email, password)).rejects.toThrow(
         'Błędny email lub hasło',
       );
-      expect(mockUsersService.findByEmail).toHaveBeenCalledWith(email);
+      expect(mockUsersServiceMethods.findByEmail).toHaveBeenCalledWith(email);
       expect(bcrypt.compare).toHaveBeenCalledWith(password, mockUser.password);
-      expect(mockJwtService.signAsync).not.toHaveBeenCalled();
+      expect(mockJwtServiceMethods.signAsync).not.toHaveBeenCalled();
     });
 
     it('should generate JWT token with correct payload', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUsersServiceMethods.findByEmail.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      mockJwtService.signAsync.mockResolvedValue(accessToken);
+      mockJwtServiceMethods.signAsync.mockResolvedValue(accessToken);
 
       await service.login(email, password);
 
-      expect(mockJwtService.signAsync).toHaveBeenCalledWith({
+      expect(mockJwtServiceMethods.signAsync).toHaveBeenCalledWith({
         sub: mockUser.id,
         email: mockUser.email,
       });
     });
 
     it('should return user info without password', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUsersServiceMethods.findByEmail.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      mockJwtService.signAsync.mockResolvedValue(accessToken);
+      mockJwtServiceMethods.signAsync.mockResolvedValue(accessToken);
 
       const result = await service.login(email, password);
 
@@ -149,7 +145,7 @@ describe('AuthService', () => {
     });
 
     it('should handle bcrypt comparison errors', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUsersServiceMethods.findByEmail.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockRejectedValue(
         new Error('Bcrypt comparison error'),
       );
@@ -157,13 +153,13 @@ describe('AuthService', () => {
       await expect(service.login(email, password)).rejects.toThrow(
         'Bcrypt comparison error',
       );
-      expect(mockJwtService.signAsync).not.toHaveBeenCalled();
+      expect(mockJwtServiceMethods.signAsync).not.toHaveBeenCalled();
     });
 
     it('should handle JWT signing errors', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUsersServiceMethods.findByEmail.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      mockJwtService.signAsync.mockRejectedValue(
+      mockJwtServiceMethods.signAsync.mockRejectedValue(
         new Error('JWT signing error'),
       );
 

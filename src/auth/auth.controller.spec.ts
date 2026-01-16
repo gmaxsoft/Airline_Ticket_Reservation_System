@@ -6,7 +6,6 @@ import { LoginDto } from './dto/login.dto';
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let mockAuthService: jest.Mocked<AuthService>;
 
   const mockLoginResponse = {
     access_token: 'mockAccessToken123',
@@ -33,7 +32,6 @@ describe('AuthController', () => {
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
-    mockAuthService = module.get<jest.Mocked<AuthService>>(AuthService);
 
     // Reset all mocks before each test
     jest.clearAllMocks();
