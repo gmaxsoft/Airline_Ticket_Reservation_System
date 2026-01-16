@@ -8,7 +8,6 @@ import { User } from '@prisma/client';
 
 describe('UsersController', () => {
   let controller: UsersController;
-  let mockUsersService: jest.Mocked<UsersService>;
 
   const mockSafeUser: Omit<User, 'password'> = {
     id: 1,

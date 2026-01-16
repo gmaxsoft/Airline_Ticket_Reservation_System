@@ -15,7 +15,6 @@ jest.mock('bcrypt', () => ({
 
 describe('UsersService', () => {
   let service: UsersService;
-  let prismaService: PrismaService;
 
   const mockUser: User = {
     id: 1,
@@ -54,7 +53,6 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    prismaService = module.get<PrismaService>(PrismaService);
 
     // Reset all mocks before each test
     jest.clearAllMocks();
@@ -305,7 +303,7 @@ describe('UsersService', () => {
   describe('remove', () => {
     it('should delete a user', async () => {
       // findOne uses findUnique with select
-      mockPrismaService.user.findUnique.mockImplementation((args) => {
+      mockPrismaService.user.findUnique.mockImplementation((args: any) => {
         if (args?.where?.id === 1) {
           return Promise.resolve(mockSafeUser);
         }
