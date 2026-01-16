@@ -25,7 +25,8 @@
     "prisma:format": "prisma format",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "docker:logs": "docker-compose logs -f",
+    "nest": "nest"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// plik konfiguracyjny Prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +7,38 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  fullName  String
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+}
+
+model Flight {
+  id            Int       @id @default(autoincrement())
+  flightNumber  String    @unique
+  origin        String    // np. WAW
+  destination   String    // np. JFK
+  departureTime DateTime
+  price         Decimal   @db.Decimal(10, 2)
+  totalSeats    Int
+  bookings      Booking[]
+}
+
+model Booking {
+  id          Int      @id @default(autoincrement())
+  bookingDate DateTime @default(now())
+  seatNumber  String
+  status      String   @default("confirmed") // np. confirmed, cancelled
+  
+  // Relacje
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  
+  flight      Flight   @relation(fields: [flightId], references: [id])
+  flightId    Int
 }
