@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import * as bcrypt from 'bcrypt';
 
 // Ustaw DATABASE_URL
 const databaseUrl =
@@ -396,15 +397,89 @@ const flights = [
   },
 ];
 
+// Przykładowi użytkownicy
+const users = [
+  { email: 'john.doe@example.com', password: 'password123', fullName: 'John Doe' },
+  { email: 'jane.smith@example.com', password: 'password123', fullName: 'Jane Smith' },
+  { email: 'mike.johnson@example.com', password: 'password123', fullName: 'Mike Johnson' },
+  { email: 'sarah.williams@example.com', password: 'password123', fullName: 'Sarah Williams' },
+  { email: 'david.brown@example.com', password: 'password123', fullName: 'David Brown' },
+  { email: 'emily.davis@example.com', password: 'password123', fullName: 'Emily Davis' },
+  { email: 'chris.miller@example.com', password: 'password123', fullName: 'Chris Miller' },
+  { email: 'lisa.wilson@example.com', password: 'password123', fullName: 'Lisa Wilson' },
+  { email: 'robert.moore@example.com', password: 'password123', fullName: 'Robert Moore' },
+  { email: 'jennifer.taylor@example.com', password: 'password123', fullName: 'Jennifer Taylor' },
+  { email: 'william.anderson@example.com', password: 'password123', fullName: 'William Anderson' },
+  { email: 'maria.thomas@example.com', password: 'password123', fullName: 'Maria Thomas' },
+  { email: 'james.jackson@example.com', password: 'password123', fullName: 'James Jackson' },
+  { email: 'patricia.white@example.com', password: 'password123', fullName: 'Patricia White' },
+  { email: 'richard.harris@example.com', password: 'password123', fullName: 'Richard Harris' },
+  { email: 'linda.martin@example.com', password: 'password123', fullName: 'Linda Martin' },
+  { email: 'joseph.thompson@example.com', password: 'password123', fullName: 'Joseph Thompson' },
+  { email: 'barbara.garcia@example.com', password: 'password123', fullName: 'Barbara Garcia' },
+  { email: 'thomas.martinez@example.com', password: 'password123', fullName: 'Thomas Martinez' },
+  { email: 'susan.robinson@example.com', password: 'password123', fullName: 'Susan Robinson' },
+  { email: 'charles.clark@example.com', password: 'password123', fullName: 'Charles Clark' },
+  { email: 'jessica.rodriguez@example.com', password: 'password123', fullName: 'Jessica Rodriguez' },
+  { email: 'daniel.lewis@example.com', password: 'password123', fullName: 'Daniel Lewis' },
+  { email: 'karen.lee@example.com', password: 'password123', fullName: 'Karen Lee' },
+  { email: 'matthew.walker@example.com', password: 'password123', fullName: 'Matthew Walker' },
+  { email: 'nancy.hall@example.com', password: 'password123', fullName: 'Nancy Hall' },
+  { email: 'anthony.allen@example.com', password: 'password123', fullName: 'Anthony Allen' },
+  { email: 'betty.young@example.com', password: 'password123', fullName: 'Betty Young' },
+  { email: 'mark.king@example.com', password: 'password123', fullName: 'Mark King' },
+  { email: 'helen.wright@example.com', password: 'password123', fullName: 'Helen Wright' },
+  { email: 'donald.scott@example.com', password: 'password123', fullName: 'Donald Scott' },
+  { email: 'sandra.torres@example.com', password: 'password123', fullName: 'Sandra Torres' },
+  { email: 'paul.nguyen@example.com', password: 'password123', fullName: 'Paul Nguyen' },
+  { email: 'donna.hill@example.com', password: 'password123', fullName: 'Donna Hill' },
+  { email: 'steven.flores@example.com', password: 'password123', fullName: 'Steven Flores' },
+  { email: 'carol.green@example.com', password: 'password123', fullName: 'Carol Green' },
+  { email: 'andrew.adams@example.com', password: 'password123', fullName: 'Andrew Adams' },
+  { email: 'ruth.nelson@example.com', password: 'password123', fullName: 'Ruth Nelson' },
+  { email: 'kenneth.baker@example.com', password: 'password123', fullName: 'Kenneth Baker' },
+  { email: 'sharon.hall@example.com', password: 'password123', fullName: 'Sharon Hall' },
+  { email: 'joseph.rivera@example.com', password: 'password123', fullName: 'Joseph Rivera' },
+  { email: 'michelle.campbell@example.com', password: 'password123', fullName: 'Michelle Campbell' },
+  { email: 'kevin.mitchell@example.com', password: 'password123', fullName: 'Kevin Mitchell' },
+  { email: 'laura.carter@example.com', password: 'password123', fullName: 'Laura Carter' },
+  { email: 'brian.roberts@example.com', password: 'password123', fullName: 'Brian Roberts' },
+  { email: 'kimberly.gomez@example.com', password: 'password123', fullName: 'Kimberly Gomez' },
+  { email: 'george.phillips@example.com', password: 'password123', fullName: 'George Phillips' },
+  { email: 'deborah.evans@example.com', password: 'password123', fullName: 'Deborah Evans' },
+];
+
 async function main() {
   console.log('🌱 Starting seed...');
 
   const client = await pool.connect();
 
   try {
-    // Usuń wszystkie istniejące loty
+    // Usuń wszystkie istniejące dane
+    await client.query('DELETE FROM "Booking"');
     await client.query('DELETE FROM "Flight"');
-    console.log('🗑️  Deleted all existing flights');
+    await client.query('DELETE FROM "User"');
+    console.log('🗑️  Deleted all existing data');
+
+    // Hashuj wszystkie hasła użytkowników
+    const salt = await bcrypt.genSalt(10);
+    const usersWithHashedPasswords = await Promise.all(
+      users.map(async (user) => ({
+        email: user.email,
+        password: await bcrypt.hash(user.password, salt),
+        fullName: user.fullName,
+      })),
+    );
+
+    // Dodaj przykładowych użytkowników
+    for (const user of usersWithHashedPasswords) {
+      await client.query(
+        `INSERT INTO "User" ("email", "password", "fullName")
+         VALUES ($1, $2, $3)`,
+        [user.email, user.password, user.fullName],
+      );
+    }
+    console.log(`✅ Seeded ${users.length} users`);
 
     // Dodaj przykładowe loty
     for (const flight of flights) {
