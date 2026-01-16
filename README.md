@@ -359,10 +359,10 @@ Delete flight.
 
 ### Bookings 🔒 (Protected - Requires JWT Token)
 
-All booking endpoints require authentication.
+All booking endpoints require authentication. User ID is automatically extracted from JWT token.
 
 #### POST `/bookings`
-Create a new booking.
+Create a new booking. Automatically uses user ID from JWT token.
 
 **Headers:**
 ```
@@ -372,18 +372,54 @@ Authorization: Bearer <token>
 **Request:**
 ```json
 {
-  "seatNumber": "string",
-  "flightId": "number",
-  "status": "string (default: 'confirmed')"
+  "flightId": "number (integer, min 1)",
+  "seatNumber": "string"
 }
 ```
 
 **Response:** `201 Created`
+```json
+{
+  "id": "number",
+  "flightId": "number",
+  "userId": "number",
+  "seatNumber": "string",
+  "status": "confirmed",
+  "bookingDate": "ISO 8601 date",
+  "flight": {
+    "id": "number",
+    "flightNumber": "string",
+    "origin": "string",
+    "destination": "string",
+    "departureTime": "ISO 8601 date",
+    "price": "number",
+    "totalSeats": "number"
+  },
+  "user": {
+    "id": "number",
+    "email": "string",
+    "fullName": "string",
+    "createdAt": "ISO 8601 date"
+  }
+}
+```
 
-**Error:** `401 Unauthorized` - Missing or invalid token
+**Business Validation:**
+- ✅ Checks if flight exists
+- ✅ Checks if user exists
+- ✅ Prevents overbooking (validates available seats)
+- ✅ Prevents duplicate seat booking
+- ✅ Prevents user from booking same flight twice
+
+**Errors:**
+- `401 Unauthorized` - Missing or invalid token
+- `404 Not Found` - Flight or user not found
+- `400 Bad Request` - No available seats (overbooking)
+- `400 Bad Request` - Seat already booked
+- `400 Bad Request` - User already has booking for this flight
 
 #### GET `/bookings`
-Get all bookings.
+Get all bookings (admin view).
 
 **Headers:**
 ```
@@ -391,9 +427,62 @@ Authorization: Bearer <token>
 ```
 
 **Response:** `200 OK`
+```json
+[
+  {
+    "id": "number",
+    "flightId": "number",
+    "userId": "number",
+    "seatNumber": "string",
+    "status": "string",
+    "bookingDate": "ISO 8601 date",
+    "flight": { ... },
+    "user": { ... }
+  }
+]
+```
+
+#### GET `/bookings/my` ⭐
+Get logged-in user's bookings.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": "number",
+    "flightId": "number",
+    "userId": "number",
+    "seatNumber": "string",
+    "status": "string",
+    "bookingDate": "ISO 8601 date",
+    "flight": {
+      "id": "number",
+      "flightNumber": "string",
+      "origin": "string",
+      "destination": "string",
+      "departureTime": "ISO 8601 date",
+      "price": "number",
+      "totalSeats": "number"
+    },
+    "user": {
+      "id": "number",
+      "email": "string",
+      "fullName": "string",
+      "createdAt": "ISO 8601 date"
+    }
+  }
+]
+```
+
+**Note:** Only returns bookings for the authenticated user (userId from JWT token).
 
 #### GET `/bookings/:id`
-Get booking by ID.
+Get booking by ID. Only owner can access their booking.
 
 **Headers:**
 ```
@@ -401,11 +490,26 @@ Authorization: Bearer <token>
 ```
 
 **Response:** `200 OK`
+```json
+{
+  "id": "number",
+  "flightId": "number",
+  "userId": "number",
+  "seatNumber": "string",
+  "status": "string",
+  "bookingDate": "ISO 8601 date",
+  "flight": { ... },
+  "user": { ... }
+}
+```
 
-**Error:** `401 Unauthorized` - Missing or invalid token
+**Errors:**
+- `401 Unauthorized` - Missing or invalid token
+- `404 Not Found` - Booking not found
+- `403 Forbidden` - User does not have permission to access this booking
 
 #### PATCH `/bookings/:id`
-Update booking.
+Update booking. Only owner can update their booking.
 
 **Headers:**
 ```
@@ -416,16 +520,38 @@ Authorization: Bearer <token>
 ```json
 {
   "seatNumber": "string (optional)",
-  "status": "string (optional)"
+  "status": "string (optional, 'confirmed' or 'cancelled')"
 }
 ```
 
 **Response:** `200 OK`
+```json
+{
+  "id": "number",
+  "flightId": "number",
+  "userId": "number",
+  "seatNumber": "string",
+  "status": "string",
+  "bookingDate": "ISO 8601 date",
+  "flight": { ... },
+  "user": { ... }
+}
+```
 
-**Error:** `401 Unauthorized` - Missing or invalid token
+**Business Rules:**
+- ✅ Can only cancel confirmed bookings
+- ✅ Validates seat availability when changing seat number
+- ✅ Prevents duplicate seat assignments
+
+**Errors:**
+- `401 Unauthorized` - Missing or invalid token
+- `404 Not Found` - Booking not found
+- `403 Forbidden` - User does not own this booking
+- `400 Bad Request` - Cannot cancel booking with status other than 'confirmed'
+- `400 Bad Request` - New seat is already booked
 
 #### DELETE `/bookings/:id`
-Delete booking.
+Delete booking. Only owner can delete their booking.
 
 **Headers:**
 ```
@@ -434,7 +560,10 @@ Authorization: Bearer <token>
 
 **Response:** `204 No Content`
 
-**Error:** `401 Unauthorized` - Missing or invalid token
+**Errors:**
+- `401 Unauthorized` - Missing or invalid token
+- `404 Not Found` - Booking not found
+- `403 Forbidden` - User does not own this booking
 
 ## 🏃 Running the Application
 
@@ -451,6 +580,76 @@ npm run start:debug
 ```
 
 The application will be available at `http://localhost:3000`.
+
+## 💡 Usage Examples
+
+### Complete Booking Flow
+
+```bash
+# 1. Login and get JWT token
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john.doe@example.com",
+    "password": "password123"
+  }'
+
+# Response:
+# {
+#   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+#   "user": { "id": 1, "email": "john.doe@example.com", "fullName": "John Doe" }
+# }
+
+# 2. Get available flights
+curl -X GET http://localhost:3000/flights
+
+# 3. Create a booking
+curl -X POST http://localhost:3000/bookings \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "flightId": 1,
+    "seatNumber": "12A"
+  }'
+
+# 4. Get my bookings
+curl -X GET http://localhost:3000/bookings/my \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+# 5. Cancel a booking
+curl -X PATCH http://localhost:3000/bookings/1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "cancelled"
+  }'
+```
+
+### Business Logic Examples
+
+**Overbooking Protection:**
+```bash
+# If all seats are booked, you'll get:
+# 400 Bad Request: "No available seats for flight LO001. All 200 seats are already booked."
+```
+
+**Duplicate Seat Prevention:**
+```bash
+# If seat is already booked:
+# 400 Bad Request: "Seat 12A is already booked for this flight."
+```
+
+**Single Booking Per Flight:**
+```bash
+# If user already has booking for this flight:
+# 400 Bad Request: "You already have a confirmed booking for this flight."
+```
+
+**Access Control:**
+```bash
+# If user tries to access another user's booking:
+# 403 Forbidden: "You do not have permission to access this booking"
+```
 
 ## 🧪 Testing
 
@@ -473,7 +672,16 @@ npm run test:watch
 The project includes comprehensive unit tests for:
 - **Users module** - 28 tests covering CRUD operations and security
 - **Flights module** - Tests for all flight endpoints
-- **Auth module** - 16 tests covering authentication and JWT generation
+- **Auth module** - 35 tests covering authentication, JWT generation, Guard, and Strategy
+  - AuthService: 9 tests
+  - AuthController: 7 tests
+  - JwtStrategy: 12 tests
+  - JwtAuthGuard: 7 tests
+- **Bookings module** - 42 tests covering business logic, validation, and access control
+  - BookingsService: 24 tests
+  - BookingsController: 18 tests
+
+**Total:** Over 100 unit tests covering all modules
 
 ## 📝 Available Scripts
 
@@ -551,9 +759,11 @@ prisma/
 
 - **Password Hashing** - All passwords are hashed using bcrypt (10 salt rounds)
 - **JWT Authentication** - Secure token-based authentication
-- **Protected Endpoints** - Bookings endpoints require valid JWT token
+- **JWT Guard** - Protected endpoints require valid JWT token
+- **Access Control** - Users can only access/modify their own bookings
 - **Input Validation** - All DTOs use class-validator for validation
 - **Password Security** - Passwords are never returned in API responses
+- **Business Logic Validation** - Prevents overbooking and duplicate bookings
 
 ## 🛠️ Development
 
