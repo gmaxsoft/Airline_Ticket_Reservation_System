@@ -8,9 +8,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(
-    @Body() loginDto: LoginDto,
-  ): Promise<{
+  async login(@Body() loginDto: LoginDto): Promise<{
     access_token: string;
     user: { id: number; email: string; fullName: string };
   }> {
