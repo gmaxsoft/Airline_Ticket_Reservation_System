@@ -12,6 +12,7 @@ A modern, scalable backend system for airline ticket reservations built with Nes
 - **[JWT](https://jwt.io/)** - JSON Web Tokens for authentication
 - **[Passport](http://www.passportjs.org/)** - Authentication middleware for Node.js
 - **[bcrypt](https://www.npmjs.com/package/bcrypt)** - Password hashing library
+- **[Swagger](https://swagger.io/)** - API documentation with interactive UI
 
 ## 📋 Prerequisites
 
@@ -580,6 +581,62 @@ npm run start:debug
 ```
 
 The application will be available at `http://localhost:3000`.
+
+## 📚 API Documentation (Swagger)
+
+The API is fully documented using Swagger/OpenAPI. After starting the application, you can access the interactive API documentation at:
+
+**Swagger UI:** `http://localhost:3000/api`
+
+### Features
+
+- **Interactive API Explorer** - Test all endpoints directly from the browser
+- **JWT Authentication Support** - Use the "Authorize" button (🔓) to add your JWT token
+- **Request/Response Examples** - See example requests and responses for all endpoints
+- **Schema Documentation** - View all DTOs with field descriptions and validation rules
+- **Error Documentation** - See all possible error responses for each endpoint
+
+### Using Swagger with JWT Authentication
+
+1. Start the application:
+   ```bash
+   npm run start:dev
+   ```
+
+2. Open Swagger UI in your browser:
+   ```
+   http://localhost:3000/api
+   ```
+
+3. Get a JWT token:
+   - Use the `/auth/login` endpoint in Swagger to login
+   - Copy the `access_token` from the response
+
+4. Authorize Swagger:
+   - Click the "Authorize" button (🔓) at the top right
+   - Enter your JWT token in the format: `Bearer <your-token>` or just `<your-token>`
+   - Click "Authorize" and then "Close"
+
+5. Test protected endpoints:
+   - All booking endpoints will now use your JWT token automatically
+   - You can test all operations directly from Swagger UI
+
+### Swagger Documentation Sections
+
+The API documentation is organized into the following sections:
+
+- **Aplikacja** - Root endpoint
+- **Autentykacja** - Login endpoint
+- **Użytkownicy** - User management endpoints
+- **Loty** - Flight management endpoints
+- **Rezerwacje** - Booking endpoints (protected, requires JWT)
+
+All endpoints include:
+- Detailed descriptions in Polish
+- Request body schemas
+- Response examples
+- Error response codes and descriptions
+- Authentication requirements
 
 ## 💡 Usage Examples
 
